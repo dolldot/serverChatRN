@@ -1,14 +1,14 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require('http-errors'),
+  express = require('express'),
+  path = require('path'),
+  cookieParser = require('cookie-parser'),
+  logger = require('morgan');
 
-var authRouter = require('./routes/auth');
-var usersRouter = require('./routes/users');
-var chatsRouter = require('./routes/chats');
+const authRouter = require('./routes/auth'),
+  usersRouter = require('./routes/users'),
+  chatsRouter = require('./routes/chats');
 
-var app = express();
+const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
