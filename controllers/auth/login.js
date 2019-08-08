@@ -1,18 +1,14 @@
-const express = require('express'),
-  router = express.Router(),
-  db = require('../config/db'),
+const asyncMiddleware = require('../../middleware/asyncMiddleware'),
+  SECRET_KEY = 'kalem',
   jwt = require('jsonwebtoken'),
-  bcrypt = require('bcryptjs'),
-  asyncMiddleware = require('../middleware/asyncMiddleware'),
-  SECRET_KEY = 'kalem';
+  bcrypt = require('bcryptjs');
 
-router.post(
-  '/login',
+const login = ({ users }) =>
   asyncMiddleware(async (req, res, next) => {
     let email = req.body.email;
     let password = req.body.password;
 
-    let user = await db.users.findOne({ where: { email: email } });
+    let user = await users.findOne({ where: { email: email } });
 
     if (!user) return res.status(404).json({ message: 'User not found, check your email!' });
     let pass = user.password;
@@ -21,14 +17,6 @@ router.post(
 
     const accessToken = jwt.sign({ id: user.id }, SECRET_KEY);
     res.status(200).json({ access_token: accessToken });
-  })
-);
+  });
 
-router.get(
-  '*',
-  asyncMiddleware(async (req, res, next) => {
-    res.status(403).json({ message: 'Please login or register' });
-  })
-);
-
-module.exports = router;
+module.exports = { login };
