@@ -4,7 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-var indexRouter = require('./routes/index');
+var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
 var chatsRouter = require('./routes/chats');
 
@@ -20,9 +20,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/chats', chatsRouter);
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/users', usersRouter);
+app.use('/api/v1/chats', chatsRouter);
+
+app.get('*', function(req, res) {
+  res.status(404).json({ message: 'Route not found' });
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -36,8 +40,8 @@ app.use(function(err, req, res, next) {
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  res.status(err.status || 500).json({ message: err.message });
+  // res.render('error');
 });
 
 module.exports = app;

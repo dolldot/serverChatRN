@@ -2,7 +2,7 @@
   "development": {
     "username": "root",
     "password": null,
-    "database": "testhariini",
+    "database": "chat_express",
     "host": "127.0.0.1",
     "dialect": "mysql",
     "operatorsAliases": false

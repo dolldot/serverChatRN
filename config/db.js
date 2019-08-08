@@ -1,10 +1,10 @@
-'use strict'
+'use strict';
 
 const Sequelize = require('sequelize');
-const sequelize = new Sequelize('testhariini', 'root', '', {
-    host: 'localhost',
-    dialect: 'mysql'
-})
+const sequelize = new Sequelize('chat_express', 'root', '', {
+  host: 'localhost',
+  dialect: 'mysql'
+});
 const db = {};
 
 db.Sequelize = Sequelize;

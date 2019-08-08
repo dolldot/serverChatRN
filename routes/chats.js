@@ -1,148 +1,117 @@
-var express = require('express');
-var router = express.Router();
-var db = require('../config/db');
-var jwt = require('jsonwebtoken');
+const express = require('express'),
+  router = express.Router(),
+  db = require('../config/db'),
+  asyncMiddleware = require('../middleware/asyncMiddleware'),
+  authMiddleware = require('../middleware/authMiddleware');
 
-const SECRET_KEY = 'kalem';
+router.get(
+  '/',
+  authMiddleware,
+  asyncMiddleware(async (req, res, next) => {
+    let chats = await db.chats.findAll({ include: [{ model: db.users }] });
+    if (chats.length === 0) return res.status(404).json({ message: 'Chats is empty' });
+    res.status(200).json(chats);
+  })
+);
 
-function verifikasi(req, res, next){
-  var header = req.headers['authorization'];
-  if(typeof header === 'undefined'){
-    console.log("Harus make token cuy");
-  } else {
-    var tokenUtuh = header.split(' ');
-    var tipe = tokenUtuh[0];
-    var token = tokenUtuh[1];
+router.get(
+  '/user/:id',
+  authMiddleware,
+  asyncMiddleware(async (req, res, next) => {
+    let id = req.params.id;
 
-    if(tipe !== 'Bearer'){
-      console.log("harus JWT cuy");
+    let chats = await db.chats.findAll({
+      include: [{ model: db.users }],
+      where: { userId: id }
+    });
+    if (chats.length === 0)
+      return res.status(404).json({ message: 'User is not post any chat yet' });
+    res.status(200).json(chats);
+  })
+);
+
+router.get(
+  '/:id',
+  authMiddleware,
+  asyncMiddleware(async (req, res, next) => {
+    let id = req.params.id;
+
+    let chats = await db.chats.findOne({
+      include: [{ model: db.users }],
+      where: { id: id }
+    });
+    if (!chats) return res.status(404).json({ message: 'Cannot find any chat with given id' });
+    res.status(200).json(chats);
+  })
+);
+
+router.post(
+  '/',
+  authMiddleware,
+  asyncMiddleware(async (req, res, next) => {
+    let text = req.body.text;
+
+    await db.chats.create({
+      userId: res.locals.user,
+      text: text
+    });
+
+    let chats = await db.chats.findAll({
+      include: [{ model: db.users }]
+    });
+    res.status(201).json(chats);
+  })
+);
+
+router.put(
+  '/:id',
+  authMiddleware,
+  asyncMiddleware(async (req, res, next) => {
+    let id = req.params.id;
+    let text = req.body.text;
+
+    let update = await db.chats.update(
+      {
+        userId: res.locals.user,
+        text: text
+      },
+      { where: { id: id } }
+    );
+
+    if (update[0] === 0)
+      return res.status(404).json({ message: 'Update failed, Cannot find any chat with given id' });
+
+    let chat = await db.chats.findOne({
+      include: [{ model: db.users }],
+      where: { id: id }
+    });
+    res.status(200).json(chat);
+  })
+);
+
+router.delete(
+  '/:id',
+  authMiddleware,
+  asyncMiddleware(async (req, res, next) => {
+    let id = req.params.id;
+
+    let chat = await db.chats.findOne({
+      where: { id: id }
+    });
+
+    if (!chat) {
+      return res.status(404).json({ message: 'Chat not found' });
     }
+    await chat.destroy();
+    res.status(200).json({ message: 'deleted' });
+  })
+);
 
-    jwt.verify(token, SECRET_KEY, function(err, decoded){
-      if(err) {
-        console.log("Error : " + err);
-        res.status(400).send("Token Not Valid");
-      }
-      
-    })
-    next();
-  }
-}
-
-// GET ALL POST
-router.get('/', verifikasi, function(req, res){
-    db.chats.findAll({
-        include: [
-            {model: db.users}
-        ]
-    })
-    .then(chats => {
-        res.json(chats);
-    })
-})
-
-// GET POST FOR SPECIFIC USER
-router.get('/user/:id', verifikasi, function(req, res, next){
-    var id = req.params.id;
-  
-    db.chats.findOne({
-        include: [
-            {model: db.users}
-        ],
-        where: {userId: id}
-    }).then(chats => {
-        // res.send(JSON.stringify({"Status": 200, "error": null, "results": posts}))chats
-        res.json(chats)
-    })
-})
-
-// GET SPECIFIC POST
-router.get('/:id', verifikasi, function(req, res, next){
-    var id = req.params.id;
-  
-    db.chats.findOne({
-        include: [
-            {model: db.users}
-        ],
-        where: {id: id}
-    }).then(chat => {
-        res.json(chat)
-    })
-})
-
-// CREATE A POST
-router.post('/', verifikasi, function(req, res, next){
-    var userId = req.body.userId;
-    var text = req.body.text;
-
-    db.chats.create({
-        userId: userId,
-        text: text
-    }).then(() => {
-        db.chats.findAll({
-            include: [
-                {model: db.users}
-            ]
-        }).then(chats => {
-            res.json(chats)
-        })
-    })
-})
-
-// RANDOM CHAT
-router.post('/random', function(req, res, next){
-    var userId = req.body.userId;
-    var text = req.body.text;
-
-    db.chats.create({
-        userId: userId,
-        text: text
-    }).then(() => {
-        db.chats.findAll({
-            include: [
-                {model: db.users}
-            ]
-        }).then(chats => {
-            res.json(chats)
-        })
-    })
-})
-
-// UPDATE POST
-router.put('/:id', verifikasi, function(req, res, next){
-  var id = req.params.id;
-  var userId = req.body.userid;
-  var text = req.body.text;
-
-    db.chats.update({
-        userId: userId,
-        text: text
-    }, {where: {id: id}}
-    ).then(() => {
-        db.chats.findOne({
-            include: [
-                {model: db.users}
-            ],
-            where: {id: id}
-        }).then(chat => {
-            res.json(chat)
-        })
-    })
-})
-
-// DELETE POST
-router.delete('/:id', verifikasi, function(req, res, next){
-    var id = req.params.id;
-
-    db.chats.findOne({
-        where: {id: id},
-    }).then(chat => {
-        if (!chat) {
-            return res.status(404).send();
-        }
-        chat.destroy();
-        res.status(200).send();
-    })
-})
+router.get(
+  '*',
+  asyncMiddleware(async (req, res, next) => {
+    res.status(403).json({ message: 'Please login or register' });
+  })
+);
 
 module.exports = router;
