@@ -17,7 +17,7 @@ const update = ({ users, chats }) =>
       return res.status(404).json({ message: 'Update failed, Cannot find any chat with given id' });
 
     let chat = await chats.findOne({
-      include: [{ model: users }],
+      include: [{ model: users.scope('withoutPassword') }],
       where: { id: id }
     });
     res.status(200).json(chat);

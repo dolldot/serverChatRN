@@ -7,7 +7,13 @@ module.exports = (sequelize, DataTypes) => {
       email: DataTypes.STRING,
       password: DataTypes.STRING
     },
-    {}
+    {
+      scopes: {
+        withoutPassword: {
+          attributes: { exclude: ['password'] }
+        }
+      }
+    }
   );
   User.associate = function(models) {
     // associations can be defined here

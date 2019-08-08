@@ -5,7 +5,7 @@ const get = ({ users, chats }) =>
     let id = req.params.id;
 
     let chat = await chats.findOne({
-      include: [{ model: users }],
+      include: [{ model: users.scope('withoutPassword') }],
       where: { id: id }
     });
     if (!chat) return res.status(404).json({ message: 'Cannot find any chat with given id' });

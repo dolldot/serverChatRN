@@ -17,7 +17,7 @@ const update = ({ users }) =>
 
     if (update[0] === 0) return res.status(401).json({ message: 'Unauthorized' });
 
-    let user = await users.findOne({
+    let user = await users.scope('withoutPassword').findOne({
       where: { id: res.locals.user }
     });
     res.status(200).json(user);

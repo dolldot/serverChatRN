@@ -10,7 +10,7 @@ const create = ({ users, chats }) =>
     });
 
     let chat = await chats.findAll({
-      include: [{ model: users }]
+      include: [{ model: users.scope('withoutPassword') }]
     });
     res.status(201).json(chat);
   });

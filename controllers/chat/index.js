@@ -6,9 +6,11 @@ const { get } = require('./get'),
   { list } = require('./list'),
   { update } = require('./update'),
   { create } = require('./create'),
-  { remove } = require('./remove');
+  { remove } = require('./remove'),
+  { user } = require('./user');
 
 module.exports = models => {
+  api.get('/user', auth, user(models));
   api.get('/:id', auth, get(models));
   api.get('/', auth, list(models));
   api.post('/', auth, create(models));
