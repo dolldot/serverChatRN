@@ -3,8 +3,15 @@ const asyncMiddleware = require('../../middleware/asyncMiddleware'),
   jwt = require('jsonwebtoken'),
   bcrypt = require('bcryptjs');
 
+const { validationResult } = require('express-validator');
+
 const login = ({ users }) =>
   asyncMiddleware(async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
     let email = req.body.email;
     let password = req.body.password;
 

@@ -5,6 +5,9 @@ const update = ({ users, chats }) =>
     let id = req.params.id;
     let text = req.body.text;
 
+    let check = await chats.findOne({ where: { id: id } });
+    if (check.userId != res.locals.user) return res.status(401).json({ message: 'Unauthorized' });
+
     let update = await chats.update(
       {
         userId: res.locals.user,
